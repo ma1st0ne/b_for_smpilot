@@ -49,10 +49,10 @@ def index(client, message):
                 if message.chat.username:
                     username = message.chat.username
                     cursor.execute(
-                        'INSERT INTO users(t_id, username) VALUES(?,?)', (str(id), username))
+                        'INSERT INTO users(t_id) VALUES(?)', (str(id), ))
                 else:
                     cursor.execute(
-                        'INSERT INTO users(t_id, username) VALUES(?)', (str(id), ))
+                        'INSERT INTO users(t_id) VALUES(?)', (str(id), ))
                 cursor.execute(
                     'DELETE FROM auth_codes WHERE auth_code == ?', (code,))
                 db.commit()
@@ -96,7 +96,7 @@ def index(client, message):
             return 1
         else:
             app.send_message(message.chat.id, 'Отправлено. Жду подтверждения')
-            time.sleep(8)
+            time.sleep(20)
             r = requests.get(
                 f'https://smspilot.ru/api.php?check={server_id}&apikey={API_KEY}&format=json')
             answer = r.json()
@@ -109,26 +109,12 @@ def index(client, message):
                     app.send_message(
                         message.chat.id, 'Сообщение не доставлено')
                     return 1
-                elif answer['check'][0]['status'] == '0' or answer['check'][0]['status'] == '1':
+                elif answer['check'][0]['status'] == '2':
                     app.send_message(
-                        message.chat.id, 'Ждем')
-                    time.sleep(8)
-                    r = requests.get(
-                        f'https://smspilot.ru/api.php?check={server_id}&apikey={API_KEY}&format=json')
-                    answer = r.json()
-                    if 'error' in answer:
-                        app.send_message(
-                            message.chat.id, answer['error']['description_ru'])
-                        return 1
-                    elif answer['check'][0]['status'] == '-1':
-                        app.send_message(
-                            message.chat.id, 'Сообщение не доставлено')
-                    elif answer['check'][0]['status'] == '2':
-                        app.send_message(
-                            message.chat.id, 'Сообщение доставлено')
-                        return 1
+                        message.chat.id, 'Сообщение доставлено')
+                    return 1
                 else:
-                    app.send_message(message.chat.id, 'Unknown error')
+                    app.send_message(message.chat.id, 'Сообщение не доставлено\n\nвозможно произошла ошибка, попробуй еще раз')
 
 
 if __name__ == '__main__':
